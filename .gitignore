@@ -1,0 +1,10 @@
+dados/
+armazenamento/
+node_modules/
+__pycache__/
+*.pyc
+.env
+*.egg-info/
+dist/
+build/
+.vite/

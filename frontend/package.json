@@ -1,0 +1,37 @@
+{
+  "name": "nanoxus-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 8080",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint ."
+  },
+  "dependencies": {
+    "@primevue/themes": "^4.3.3",
+    "@vueuse/core": "^12.5.0",
+    "axios": "^1.7.9",
+    "chart.js": "^4.4.7",
+    "pinia": "^2.3.1",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.3.3",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@tailwindcss/vite": "^4.0.7",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "eslint": "^10.0.0",
+    "eslint-plugin-vue": "^10.8.0",
+    "tailwindcss": "^4.0.7",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.56.0",
+    "vite": "^6.0.7",
+    "vue-eslint-parser": "^10.4.0",
+    "vue-tsc": "^2.2.0"
+  }
+}

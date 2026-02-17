@@ -1,0 +1,39 @@
+@import "tailwindcss";
+@import "primeicons/primeicons.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-nano-50: #f0fdf2;
+  --color-nano-100: #ddfbe2;
+  --color-nano-200: #bdf5c7;
+  --color-nano-300: #8beb9f;
+  --color-nano-400: #52d96e;
+  --color-nano-500: #38c649;
+  --color-nano-600: #24a235;
+  --color-nano-700: #1f7f2c;
+  --color-nano-800: #1e6428;
+  --color-nano-900: #1a5323;
+  --color-nano-950: #092e10;
+
+  --color-surface-800: #1a1d22;
+  --color-surface-900: #21242b;
+  --color-surface-850: #1e2128;
+  --color-surface-700: #282c34;
+  --color-surface-600: #363b46;
+  --color-surface-500: #454c59;
+
+  --color-success-500: #22c55e;
+  --color-danger-500: #ef4444;
+  --color-warning-500: #f59e0b;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

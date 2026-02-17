@@ -1,0 +1,258 @@
+prompts:
+  - nome: "dispersos_finos"
+    descricao: "Poucos nanofios finos e compridos, bem separados"
+    quantidade: 150
+    largura: 1024
+    altura: 768
+    nanofios:
+      quantidade: [5, 18]
+      comprimento: [200, 550]
+      diametro: [1, 3]
+      brilho: [170, 240]
+      ondulacao: 0.005
+      orientacao: null
+      efeito_borda: true
+      catalise_ponta: true
+      sombra: true
+      clusters: 0
+    substrato:
+      brilho: [50, 100]
+      textura: "liso"
+      ruido: [4, 8]
+      gradiente: 8
+      salt_pepper: 0.001
+    particulas:
+      ativo: true
+      quantidade: [3, 10]
+      raio: [1, 3]
+      brilho: [130, 200]
+    barra_info:
+      ativo: true
+      probabilidade: 0.35
+    pos_processamento:
+      blur: { probabilidade: 0.2, kernels: [3] }
+      ruido_detector: [2, 4]
+      contraste: [0.9, 1.1]
+      brilho_ajuste: [-5, 5]
+
+  - nome: "alinhados_denso"
+    descricao: "Nanofios densos aproximadamente paralelos (crescimento direcionado)"
+    quantidade: 150
+    largura: 1024
+    altura: 768
+    nanofios:
+      quantidade: [40, 90]
+      comprimento: [150, 400]
+      diametro: [2, 5]
+      brilho: [160, 230]
+      ondulacao: 0.01
+      orientacao: "vertical"
+      efeito_borda: true
+      catalise_ponta: true
+      sombra: true
+      clusters: 0
+    substrato:
+      brilho: [30, 70]
+      textura: "granular"
+      escala_grao: 24
+      ruido: [6, 12]
+      gradiente: 10
+      salt_pepper: 0.002
+    particulas:
+      ativo: true
+      quantidade: [5, 15]
+      raio: [1, 3]
+      brilho: [140, 210]
+    barra_info:
+      ativo: true
+      probabilidade: 0.3
+    pos_processamento:
+      blur: { probabilidade: 0.15, kernels: [3] }
+      ruido_detector: [3, 6]
+      contraste: [0.85, 1.15]
+      brilho_ajuste: [-8, 8]
+
+  - nome: "rede_cruzada"
+    descricao: "Nanofios cruzando em ângulos variados formando rede"
+    quantidade: 140
+    largura: 1024
+    altura: 768
+    nanofios:
+      quantidade: [25, 60]
+      comprimento: [120, 450]
+      diametro: [2, 6]
+      brilho: [155, 235]
+      ondulacao: 0.015
+      orientacao: null
+      efeito_borda: true
+      catalise_ponta: false
+      sombra: true
+      clusters: [0, 2]
+    substrato:
+      brilho: [40, 90]
+      textura: "granular"
+      escala_grao: 32
+      ruido: [5, 10]
+      gradiente: 12
+      salt_pepper: 0.002
+    particulas:
+      ativo: true
+      quantidade: [8, 25]
+      raio: [1, 4]
+      brilho: [130, 220]
+    barra_info:
+      ativo: true
+      probabilidade: 0.4
+    pos_processamento:
+      blur: { probabilidade: 0.25, kernels: [3, 5] }
+      ruido_detector: [3, 5]
+      contraste: [0.88, 1.12]
+      brilho_ajuste: [-6, 6]
+
+  - nome: "grossos_curtos"
+    descricao: "Vista de alta magnificação: nanofios grossos, detalhes visíveis"
+    quantidade: 130
+    largura: 1024
+    altura: 768
+    nanofios:
+      quantidade: [8, 25]
+      comprimento: [80, 250]
+      diametro: [5, 12]
+      brilho: [140, 220]
+      ondulacao: 0.008
+      orientacao: null
+      efeito_borda: true
+      catalise_ponta: true
+      sombra: true
+      clusters: 0
+    substrato:
+      brilho: [35, 80]
+      textura: "poroso"
+      ruido: [6, 12]
+      gradiente: 15
+      salt_pepper: 0.003
+    particulas:
+      ativo: true
+      quantidade: [10, 30]
+      raio: [2, 5]
+      brilho: [120, 200]
+    barra_info:
+      ativo: true
+      probabilidade: 0.35
+      magnificacoes: ["50kX", "100kX", "200kX"]
+      escalas: ["200 nm", "500 nm", "100 nm"]
+    pos_processamento:
+      blur: { probabilidade: 0.3, kernels: [3, 5] }
+      ruido_detector: [2, 5]
+      contraste: [0.85, 1.15]
+      brilho_ajuste: [-8, 8]
+
+  - nome: "clusters"
+    descricao: "Aglomerados de nanofios emanando de pontos catalíticos"
+    quantidade: 130
+    largura: 1024
+    altura: 768
+    nanofios:
+      quantidade: [5, 15]
+      comprimento: [100, 350]
+      diametro: [2, 5]
+      brilho: [160, 235]
+      ondulacao: 0.02
+      orientacao: null
+      efeito_borda: true
+      catalise_ponta: true
+      sombra: true
+      clusters: [3, 8]
+      abertura_cluster: 0.6
+    substrato:
+      brilho: [45, 85]
+      textura: "granular"
+      escala_grao: 28
+      ruido: [5, 10]
+      gradiente: 10
+      salt_pepper: 0.002
+    particulas:
+      ativo: true
+      quantidade: [15, 40]
+      raio: [1, 4]
+      brilho: [130, 210]
+    barra_info:
+      ativo: true
+      probabilidade: 0.3
+    pos_processamento:
+      blur: { probabilidade: 0.2, kernels: [3] }
+      ruido_detector: [3, 5]
+      contraste: [0.9, 1.1]
+      brilho_ajuste: [-5, 5]
+
+  - nome: "ruidoso"
+    descricao: "Imagem ruidosa com baixo contraste (difícil de analisar)"
+    quantidade: 130
+    largura: 1024
+    altura: 768
+    nanofios:
+      quantidade: [15, 40]
+      comprimento: [100, 350]
+      diametro: [2, 6]
+      brilho: [110, 170]
+      ondulacao: 0.02
+      orientacao: null
+      efeito_borda: false
+      catalise_ponta: false
+      sombra: false
+      clusters: [0, 3]
+    substrato:
+      brilho: [60, 120]
+      textura: "granular"
+      escala_grao: 20
+      ruido: [10, 20]
+      gradiente: 18
+      salt_pepper: 0.005
+    particulas:
+      ativo: true
+      quantidade: [20, 50]
+      raio: [1, 3]
+      brilho: [100, 180]
+    barra_info:
+      ativo: true
+      probabilidade: 0.25
+    pos_processamento:
+      blur: { probabilidade: 0.5, kernels: [3, 5, 7] }
+      ruido_detector: [6, 12]
+      contraste: [0.7, 0.9]
+      brilho_ajuste: [-10, 10]
+
+  - nome: "floresta_top"
+    descricao: "Vista de topo de nanofios verticais — pontas circulares sobre fundo escuro"
+    quantidade: 170
+    largura: 1024
+    altura: 768
+    nanofios:
+      quantidade: [50, 120]
+      comprimento: [10, 40]
+      diametro: [3, 8]
+      brilho: [170, 250]
+      ondulacao: 0.0
+      orientacao: null
+      efeito_borda: true
+      catalise_ponta: true
+      sombra: false
+      clusters: 0
+    substrato:
+      brilho: [20, 50]
+      textura: "liso"
+      ruido: [3, 7]
+      gradiente: 6
+      salt_pepper: 0.001
+    particulas:
+      ativo: false
+    barra_info:
+      ativo: true
+      probabilidade: 0.4
+      magnificacoes: ["25kX", "50kX", "100kX"]
+      escalas: ["500 nm", "1 µm", "200 nm"]
+    pos_processamento:
+      blur: { probabilidade: 0.15, kernels: [3] }
+      ruido_detector: [2, 4]
+      contraste: [0.9, 1.1]
+      brilho_ajuste: [-5, 5]

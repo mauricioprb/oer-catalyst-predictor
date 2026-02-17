@@ -1,0 +1,43 @@
+services:
+  api_nanoxus:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: api_nanoxus
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - armazenamento_modelos:/app/armazenamento
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    runtime: nvidia
+    restart: unless-stopped
+    networks:
+      - rede_nanoxus
+
+  interface_web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: interface_web
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - api_nanoxus
+    restart: unless-stopped
+    networks:
+      - rede_nanoxus
+
+volumes:
+  armazenamento_modelos:
+
+networks:
+  rede_nanoxus:
+    driver: bridge
