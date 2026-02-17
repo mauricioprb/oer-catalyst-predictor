@@ -79,7 +79,7 @@ class GerenciadorTreinamento:
         otimizador: Optimizer,
         funcao_perda: nn.Module,
         caminho_artefatos: Path | str = Path("/app/armazenamento/pesos"),
-        agendador_lr: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
+        agendador_lr: Optional[torch.optim.lr_scheduler.LRScheduler] = None,
         paciencia_early_stop: int = 10,
     ) -> None:
         self.dispositivo: torch.device = torch.device(
@@ -92,7 +92,7 @@ class GerenciadorTreinamento:
         self.otimizador: Optimizer = otimizador
         self.funcao_perda: nn.Module = funcao_perda.to(self.dispositivo)
         self.caminho_artefatos: Path = Path(caminho_artefatos)
-        self.agendador_lr: Optional[torch.optim.lr_scheduler._LRScheduler] = (
+        self.agendador_lr: Optional[torch.optim.lr_scheduler.LRScheduler] = (
             agendador_lr
         )
         self.paciencia_early_stop: int = paciencia_early_stop
