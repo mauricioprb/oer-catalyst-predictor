@@ -45,4 +45,9 @@ const router = createRouter({
   },
 })
 
+router.afterEach((to) => {
+  const titulo = to.meta.titulo as string | undefined
+  document.title = titulo ? `Nanoxus - ${titulo}` : 'Nanoxus'
+})
+
 export default router
