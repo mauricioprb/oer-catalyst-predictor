@@ -8,7 +8,6 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
-      - armazenamento_modelos:/app/armazenamento
     environment:
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
@@ -34,9 +33,6 @@ services:
     restart: unless-stopped
     networks:
       - rede_nanoxus
-
-volumes:
-  armazenamento_modelos:
 
 networks:
   rede_nanoxus:

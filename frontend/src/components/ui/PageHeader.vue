@@ -23,6 +23,7 @@ withDefaults(
     corIcone?: string
   }>(),
   {
+    subtitulo: '',
     corFundo: 'bg-nano-100 dark:bg-nano-900/40',
     corIcone: 'text-nano-600 dark:text-nano-400',
   },

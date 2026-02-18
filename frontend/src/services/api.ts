@@ -1,12 +1,5 @@
 import axios from 'axios'
-import type {
-  RespostaAnalise,
-  RespostaTreinamento,
-  ParametrosTreinamento,
-  StatusTarefa,
-  StatusSaude,
-  StatusServico,
-} from '@/types'
+import type { StatusSaude, RespostaOER } from '@/types'
 
 const http = axios.create({
   baseURL: '/',
@@ -19,27 +12,12 @@ export const apiService = {
     return data
   },
 
-  async verificarStatus(): Promise<StatusServico> {
-    const { data } = await http.get<StatusServico>('/api/status')
-    return data
-  },
-
-  async analisarImagem(arquivo: File): Promise<RespostaAnalise> {
+  async predizirOER(arquivo: File): Promise<RespostaOER> {
     const formData = new FormData()
     formData.append('arquivo', arquivo)
-    const { data } = await http.post<RespostaAnalise>('/api/analisar-imagem', formData, {
+    const { data } = await http.post<RespostaOER>('/api/predict', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
-    return data
-  },
-
-  async iniciarTreinamento(parametros: Partial<ParametrosTreinamento>): Promise<RespostaTreinamento> {
-    const { data } = await http.post<RespostaTreinamento>('/api/iniciar-treinamento', parametros)
-    return data
-  },
-
-  async consultarTreinamento(idTarefa: string): Promise<StatusTarefa> {
-    const { data } = await http.get<StatusTarefa>(`/api/treinamento/${idTarefa}`)
     return data
   },
 }

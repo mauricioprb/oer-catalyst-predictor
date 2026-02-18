@@ -37,3 +37,27 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Toast responsivo */
+@media (max-width: 640px) {
+  .p-toast.p-toast-bottom-right,
+  .p-toast.p-toast-bottom-left,
+  .p-toast.p-toast-top-right,
+  .p-toast.p-toast-top-left {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%);
+    width: calc(100% - 2rem);
+    max-width: 100%;
+  }
+
+  .p-toast.p-toast-bottom-right,
+  .p-toast.p-toast-bottom-left {
+    bottom: 1rem !important;
+  }
+
+  .p-toast .p-toast-message {
+    width: 100%;
+    margin: 0 0 0.5rem 0;
+  }
+}

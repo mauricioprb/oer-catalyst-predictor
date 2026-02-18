@@ -1,10 +1,18 @@
 {
   "typescript.tsdk": "frontend/node_modules/typescript/lib",
+
+  // ESLint
+  "eslint.enable": true,
+  "eslint.useFlatConfig": true,
   "eslint.workingDirectories": ["frontend"],
+  "eslint.validate": ["javascript", "typescript", "vue"],
+
+  // Formatar ao salvar via ESLint
   "editor.formatOnSave": false,
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
+
   "[vue]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   },

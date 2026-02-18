@@ -5,35 +5,23 @@ import DashboardLayout from '@/layouts/DashboardLayout.vue'
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    redirect: '/dashboard',
+    redirect: '/laboratorio',
   },
   {
-    path: '/dashboard',
+    path: '/',
     component: DashboardLayout,
     children: [
       {
-        path: '',
-        name: 'dashboard',
-        component: () => import('@/views/DashboardView.vue'),
-        meta: { titulo: 'Visão Geral' },
-      },
-      {
-        path: 'analise',
-        name: 'analise',
-        component: () => import('@/views/AnaliseView.vue'),
-        meta: { titulo: 'Análise de Imagem' },
-      },
-      {
-        path: 'treinamento',
-        name: 'treinamento',
-        component: () => import('@/views/TreinamentoView.vue'),
-        meta: { titulo: 'Treinamento' },
+        path: 'laboratorio',
+        name: 'laboratorio',
+        component: () => import('@/views/LaboratorioView.vue'),
+        meta: { titulo: 'Laboratório — Predição OER' },
       },
     ],
   },
   {
     path: '/:pathMatch(.*)*',
-    redirect: '/dashboard',
+    redirect: '/laboratorio',
   },
 ]
 

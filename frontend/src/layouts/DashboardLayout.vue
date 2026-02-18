@@ -7,7 +7,7 @@
       <div class="relative">
         <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:px-8">
           <router-link
-            to="/dashboard"
+            to="/laboratorio"
             class="flex items-center gap-3 transition-opacity hover:opacity-80"
             aria-label="Ir para a página inicial"
           >
@@ -49,10 +49,10 @@
                 {{ health.online ? 'API Online' : 'API Offline' }}
               </span>
               <span
-                v-if="health.online"
+                v-if="health.predictorLoaded"
                 class="border-l border-slate-200 pl-2 text-xs text-slate-400 dark:border-surface-600 dark:text-slate-500"
               >
-                {{ health.dispositivoLabel }}
+                CHGNet
               </span>
             </div>
 
@@ -105,7 +105,7 @@
               <StatusIndicator :online="health.online" />
               <span class="text-xs text-slate-500 dark:text-slate-400">
                 {{ health.online ? 'API Operacional' : 'API Indisponível' }}
-                <template v-if="health.online"> · {{ health.dispositivoLabel }}</template>
+                <template v-if="health.predictorLoaded"> · CHGNet</template>
               </span>
             </div>
           </div>
@@ -123,7 +123,7 @@
 
     <footer class="border-t border-slate-200 bg-white py-4 dark:border-surface-600 dark:bg-surface-800">
       <div class="mx-auto max-w-7xl px-4 text-center text-xs text-slate-400 dark:text-slate-500 lg:px-8">
-        <p>Nanoxus &mdash; Detecção de Fraude em Microscopia Eletrônica</p>
+        <p>&copy; {{ year }} <span class="font-bold">Nanoxus</span></p>
       </div>
     </footer>
   </div>
@@ -142,11 +142,9 @@ const health = useHealthCheck()
 const { temaEscuro, alternarTema } = useTheme()
 const menuMobileAberto = ref(false)
 const itensNavegacao = ITENS_NAVEGACAO
+const year = new Date().getFullYear()
 
 function rotaAtiva(rota: string): boolean {
-  if (rota === '/dashboard') {
-    return route.path === '/dashboard'
-  }
   return route.path.startsWith(rota)
 }
 </script>

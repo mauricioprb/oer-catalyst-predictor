@@ -4,23 +4,20 @@ import { apiService } from '@/services/api'
 
 export const useHealthStore = defineStore('health', () => {
   const online = ref(false)
-  const modeloCarregado = ref(false)
-  const dispositivo = ref('cpu')
+  const predictorLoaded = ref(false)
   const ultimaVerificacao = ref<Date | null>(null)
   const carregando = ref(false)
 
   let _intervalo: ReturnType<typeof setInterval> | null = null
 
   const statusTexto = computed(() => (online.value ? 'Operacional' : 'Indisponível'))
-  const dispositivoLabel = computed(() => dispositivo.value.toUpperCase())
 
   async function verificar() {
     carregando.value = true
     try {
       const saude = await apiService.verificarSaude()
       online.value = saude.status === 'ok'
-      modeloCarregado.value = saude.modelo_carregado === 'True'
-      dispositivo.value = saude.dispositivo
+      predictorLoaded.value = saude.predictor_loaded === true
       ultimaVerificacao.value = new Date()
     } catch {
       online.value = false
@@ -44,12 +41,10 @@ export const useHealthStore = defineStore('health', () => {
 
   return {
     online,
-    modeloCarregado,
-    dispositivo,
+    predictorLoaded,
     ultimaVerificacao,
     carregando,
     statusTexto,
-    dispositivoLabel,
     verificar,
     iniciarPolling,
     pararPolling,

@@ -1,12 +1,10 @@
 fastapi==0.129.0
 uvicorn[standard]==0.41.0
 python-multipart==0.0.22
-pillow==12.1.1
 numpy==2.2.6
-opencv-python-headless==4.13.0.92
 torch==2.10.0
-torchvision==0.25.0
 pydantic==2.12.5
-pydantic-settings==2.13.0
-python-jose[cryptography]==3.5.0
-aiofiles==25.1.0
+pymatgen>=2025.1.0
+torch-geometric>=2.7.0
+chgnet>=0.4.0
+ase>=3.22.0

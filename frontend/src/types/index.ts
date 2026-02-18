@@ -2,14 +2,9 @@
  * Barrel export — tipos centralizados do projeto Nanoxus.
  */
 export type {
-  RespostaAnalise,
-  RespostaTreinamento,
-  ParametrosTreinamento,
-  MetricaEpoca,
-  ResultadoTreinamento,
-  StatusTarefa,
   StatusSaude,
-  StatusServico,
+  EnergiaAdsorcao,
+  RespostaOER,
 } from './api'
 
 export type { ItemNavegacao } from './navigation'
