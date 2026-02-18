@@ -43,19 +43,6 @@
               <i :class="temaEscuro ? 'pi pi-sun' : 'pi pi-moon'" class="text-lg"></i>
             </button>
 
-            <div class="hidden items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 dark:border-surface-600 sm:flex">
-              <StatusIndicator :online="health.online" />
-              <span class="text-xs font-medium text-slate-500 dark:text-slate-400">
-                {{ health.online ? 'API Online' : 'API Offline' }}
-              </span>
-              <span
-                v-if="health.predictorLoaded"
-                class="border-l border-slate-200 pl-2 text-xs text-slate-400 dark:border-surface-600 dark:text-slate-500"
-              >
-                CHGNet
-              </span>
-            </div>
-
             <button
               class="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 md:hidden dark:text-slate-400 dark:hover:bg-surface-700 dark:hover:text-slate-200"
               aria-label="Abrir menu de navegação"
@@ -121,9 +108,22 @@
       </router-view>
     </main>
 
-    <footer class="border-t border-slate-200 bg-white py-4 dark:border-surface-600 dark:bg-surface-800">
-      <div class="mx-auto max-w-7xl px-4 text-center text-xs text-slate-400 dark:text-slate-500 lg:px-8">
+    <footer class="border-t border-slate-200 bg-white py-4 dark:border-surface-600 dark:bg-surface-800 flex px-6 justify-between items-center">
+      <div class="text-xs text-slate-400 dark:text-slate-500">
         <p>&copy; {{ year }} <span class="font-bold">Nanoxus</span></p>
+      </div>
+      <div class="hidden items-center rounded-full border border-slate-200 px-3 py-1.5 dark:border-surface-600 sm:flex gap-1">
+        <StatusIndicator :online="health.online" />
+        <span class="text-xs font-medium text-slate-500 dark:text-slate-400">
+          {{ health.online ? 'API Online' : 'API Offline' }}
+        </span>
+
+        <template v-if="health.predictorLoaded">
+          <span class="text-slate-500 dark:text-slate-400">·</span>
+          <span class="text-xs text-slate-500 dark:text-slate-400">
+            CHGNet
+          </span>
+        </template>
       </div>
     </footer>
   </div>

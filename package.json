@@ -2,7 +2,7 @@
   "name": "nanoxus",
   "version": "1.0.0",
   "private": true,
-  "description": "Nanoxus — Materials Informatics & OER Catalyst Prediction",
+  "description": "Nanoxus  é uma plataforma de predição de atividade eletrocatalítica OER, utilizando o modelo CHGNet para fornecer predições sobre materiais para a evolução do oxigênio.",
   "scripts": {
     "lint": "cd frontend && npm run lint",
     "lint:check": "cd frontend && npm run lint:check",

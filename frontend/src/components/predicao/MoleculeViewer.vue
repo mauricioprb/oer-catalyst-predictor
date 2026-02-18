@@ -164,7 +164,7 @@ function loadModel(content: string): void {
 
     viewer.resize()
     viewer.zoomTo()
-    viewer.zoom(0.85) 
+    viewer.zoom(0.85)
     viewer.render()
 
     setTimeout(() => {

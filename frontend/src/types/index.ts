@@ -1,6 +1,3 @@
-/**
- * Barrel export — tipos centralizados do projeto Nanoxus.
- */
 export type {
   StatusSaude,
   EnergiaAdsorcao,

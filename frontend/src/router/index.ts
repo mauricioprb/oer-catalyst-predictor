@@ -5,23 +5,23 @@ import DashboardLayout from '@/layouts/DashboardLayout.vue'
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    redirect: '/laboratorio',
+    redirect: '/predicao',
   },
   {
     path: '/',
     component: DashboardLayout,
     children: [
       {
-        path: 'laboratorio',
-        name: 'laboratorio',
-        component: () => import('@/views/LaboratorioView.vue'),
-        meta: { titulo: 'Laboratório — Predição OER' },
+        path: 'predicao',
+        name: 'predicao',
+        component: () => import('@/views/PredicaoView.vue'),
+        meta: { titulo: 'Predição OER' },
       },
     ],
   },
   {
     path: '/:pathMatch(.*)*',
-    redirect: '/laboratorio',
+    redirect: '/predicao',
   },
 ]
 

@@ -1,33 +1,9 @@
-"""
-science_engine.py — Núcleo lógico para predição de atividade OER
-(Oxygen Evolution Reaction) em catalisadores eletroquímicos.
-
-Utiliza o CHGNet (Crystal Hamiltonian Graph Neural Network), um potencial
-interatômico universal de aprendizado de máquina pré-treinado no
-Materials Project (~1.6M estruturas, 412k parâmetros), para computar
-propriedades estruturais e eletrônicas em GPU.
-
-A predição OER segue o framework do Computational Hydrogen Electrode
-(CHE) de Nørskov et al.:
-  1. CHGNet prediz energia/átomo, forças, stress e momentos magnéticos
-  2. Geração de slab (pymatgen SlabGenerator) → relaxação CHGNet+ASE
-  3. Energia de superfície γ = (E_slab − N·e_bulk) / (2A)
-  4. Descritores físicos (γ, e_bulk, μ_mag) → ΔG_OH calibrado
-  5. Relações de escala universais → ΔG_O, ΔG_OOH
-  6. Mecanismo de 4 elétrons → overpotential η_OER
-
-Referências:
-- Deng et al., Nature Machine Intelligence 5, 1031 (2023) — CHGNet
-- Man et al., ChemCatChem 3, 1159 (2011) — Scaling relations OER
-- Nørskov et al., J. Phys. Chem. B 108, 17886 (2004) — CHE framework
-"""
-
 from __future__ import annotations
 
 import logging
 import tempfile
 from pathlib import Path
-from typing import Final, TypedDict
+from typing import TypedDict
 
 import numpy as np
 import torch
@@ -35,55 +11,19 @@ from pymatgen.core import Structure
 from pymatgen.core.surface import SlabGenerator
 from pymatgen.io.ase import AseAtomsAdaptor
 
-# Constantes eletroquímicas
-
-#: Potencial termodinâmico reversível da reação OER (V).
-E_OER_REVERSIVEL: Final[float] = 1.23
-
-#: Limiar de viabilidade para o overpotential (V).
-LIMIAR_OVERPOTENTIAL: Final[float] = 0.40
-
-#: Metais de transição reconhecidos.
-METAIS_TRANSICAO: Final[frozenset[str]] = frozenset(
-    [
-        "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn",
-        "Y", "Zr", "Nb", "Mo", "Tc", "Ru", "Rh", "Pd", "Ag", "Cd",
-        "La", "Hf", "Ta", "W", "Re", "Os", "Ir", "Pt", "Au", "Hg",
-        "Ac",
-    ]
+from app.domain.constants import (
+    DEFAULT_DG_OH,
+    E_OER_REVERSIVEL,
+    LIMIAR_OVERPOTENTIAL,
+    METAIS_TRANSICAO,
+    METAL_DG_OH,
+    MILLER_INDICES,
+    SURFACE_ENERGY_REFS,
 )
-
-#: ΔG_OH calibrado por metal (Man et al., ChemCatChem 2011).
-_METAL_DG_OH: Final[dict[str, float]] = {
-    "Sc": 0.52, "Ti": 0.78, "V": 0.97, "Cr": 1.07,
-    "Mn": 1.27, "Fe": 1.12, "Co": 1.49, "Ni": 1.45,
-    "Cu": 1.93, "Zn": 2.08,
-    "Y": 0.47, "Zr": 0.67, "Nb": 0.87, "Mo": 1.32,
-    "Tc": 1.68, "Ru": 1.60, "Rh": 1.72, "Pd": 1.83,
-    "Ag": 2.33, "Cd": 2.18,
-    "La": 0.37, "Hf": 0.62, "Ta": 0.77, "W": 1.22,
-    "Re": 1.73, "Os": 1.65, "Ir": 1.41, "Pt": 1.88,
-    "Au": 2.53, "Hg": 2.33,
-    "Ac": 0.37,
-}
-
-#: Energias de superfície de referência CHGNet (γ em J/m², slab 110).
-_SURFACE_ENERGY_REFS: Final[dict[str, float]] = {
-    "Ru": 0.741, "Ir": 0.772, "Ti": 1.125,
-    "Mn": 0.610, "Co": 0.311, "Ni": 0.301,
-}
-
-_DEFAULT_DG_OH: Final[float] = 1.20
-
-#: Índices de Miller para tentativa de geração de slab.
-_MILLER_INDICES: Final[list[tuple[int, int, int]]] = [
-    (1, 1, 0), (1, 0, 0), (0, 0, 1), (1, 0, 1), (1, 1, 1),
-]
+from app.domain.exceptions import CIFParsingError, InvalidCatalystError
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-
-# Tipagem do resultado
 
 class OERResult(TypedDict):
     formula: str
@@ -95,30 +35,11 @@ class OERResult(TypedDict):
     delta_G_OOH: float
 
 
-# Exceções de domínio
-
-
-class CIFParsingError(Exception):
-    """Falha ao interpretar o conteúdo CIF / XYZ fornecido."""
-
-
-class InvalidCatalystError(ValueError):
-    """A estrutura não atende aos requisitos mínimos de composição."""
-
-
-# Motor principal — CHGNet + CHE framework
-
-
 class OERPredictor:
-    """Preditor de atividade OER usando CHGNet (potencial universal GNN).
-
-    CHGNet é uma GNN pré-treinada em ~1.6M estruturas do Materials Project,
-    capaz de predizer energias, forças, stress e momentos magnéticos para
-    qualquer material inorgânico.  Roda em GPU (CUDA) para inferência rápida.
-    """
 
     def __init__(self, *, device: str | None = None) -> None:
         import warnings
+
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
             from chgnet.model import CHGNet
@@ -138,33 +59,23 @@ class OERPredictor:
         )
 
     def _make_calculator(self):
-        """Cria ASE Calculator com o modelo CHGNet compartilhado."""
         return self._CHGNetCalculator(model=self._model)
 
-    # API pública 
-
     def predict_oer_activity(self, file_content: str) -> OERResult:
-        """Prediz a atividade OER usando CHGNet + CHE framework."""
         structure = self._parse_structure(file_content)
         self._validate_composition(structure)
 
-        # CHGNet: predição bulk
         bulk_pred = self._predict_bulk(structure)
 
-        # Slab + energia de superfície via CHGNet
         surface_energy, _ = self._compute_surface_energy(
             structure, bulk_pred["e_per_atom"]
         )
 
-        # ΔG de adsorção (descritores CHGNet + scaling relations)
         dg_oh, dg_o, dg_ooh = self._compute_oer_energies(
             structure, bulk_pred, surface_energy
         )
 
-        # Overpotential teórico
         overpotential = self._compute_overpotential(dg_oh, dg_o, dg_ooh)
-
-        # Band gap estimado
         band_gap = self._estimate_band_gap(structure, bulk_pred)
 
         is_viable = overpotential < LIMIAR_OVERPOTENTIAL
@@ -186,10 +97,7 @@ class OERPredictor:
             delta_G_OOH=round(dg_ooh, 4),
         )
 
-    # CHGNet Predictions
-
     def _predict_bulk(self, structure: Structure) -> dict:
-        """Predição CHGNet na estrutura bulk: energia, forças, stress, magmoms."""
         pred = self._model.predict_structure(structure)
 
         e_per_atom = float(pred["e"])
@@ -221,7 +129,6 @@ class OERPredictor:
     def _compute_surface_energy(
         self, structure: Structure, e_bulk: float
     ) -> tuple[float, float]:
-        """Gera slab, relaxa com CHGNet+ASE, e calcula γ (J/m²)."""
         from ase.constraints import FixAtoms
         from ase.optimize import BFGS
 
@@ -230,7 +137,6 @@ class OERPredictor:
             logger.warning("Sem slab válido. Usando γ=0.75 J/m².")
             return 0.75, e_bulk
 
-        # Relaxar slab (fixando metade inferior)
         atoms = self._adaptor.get_atoms(slab)
         z = atoms.positions[:, 2]
         z_mid = (z.max() + z.min()) / 2.0
@@ -258,8 +164,7 @@ class OERPredictor:
         return float(gamma), e_slab
 
     def _find_best_slab(self, structure: Structure):
-        """Tenta múltiplos Miller indices e retorna o melhor slab."""
-        for hkl in _MILLER_INDICES:
+        for hkl in MILLER_INDICES:
             try:
                 slabs = SlabGenerator(
                     structure, list(hkl),
@@ -275,7 +180,6 @@ class OERPredictor:
             except Exception:
                 continue
 
-        # Fallback
         try:
             slabs = SlabGenerator(
                 structure, [1, 1, 0],
@@ -286,32 +190,18 @@ class OERPredictor:
         except Exception:
             return None
 
-    # OER Energy Computation 
-
     def _compute_oer_energies(
         self, structure: Structure, bulk_pred: dict, surface_energy: float
     ) -> tuple[float, float, float]:
-        r"""Calcula ΔG_OH, ΔG_O, ΔG_OOH combinando descritores CHGNet
-        com relações de escala universais (Man et al., 2011).
-
-        Descritores CHGNet usados para correção estrutural:
-        - Energia de superfície γ (reatividade superficial)
-        - Energia bulk por átomo (estabilidade do óxido)
-        - Momento magnético (estado eletrônico d)
-        """
         baseline = self._get_baseline_dg_oh(structure)
         metal = self._get_principal_metal(structure)
 
-        # Correção: energia de superfície
-        gamma_ref = _SURFACE_ENERGY_REFS.get(metal, 0.75)
+        gamma_ref = SURFACE_ENERGY_REFS.get(metal, 0.75)
         d_gamma = surface_energy - gamma_ref
-        corr_gamma = -0.15 * d_gamma  # γ↑ → superfície mais reativa → ΔG_OH↓
+        corr_gamma = -0.15 * d_gamma
 
-        # Correção: energia bulk
-        corr_bulk = 0.0  # sem referência → sem correção
-        # (a composição já captura o efeito principal via baseline)
+        corr_bulk = 0.0
 
-        # Correção: momento magnético
         magmom = bulk_pred["metal_avg_magmom"]
         corr_mag = 0.02 * (magmom - 1.0)
 
@@ -335,7 +225,7 @@ class OERPredictor:
         metals = symbols & METAIS_TRANSICAO
         if not metals:
             return "Ru"
-        dg_vals = [(m, _METAL_DG_OH.get(m, _DEFAULT_DG_OH)) for m in metals]
+        dg_vals = [(m, METAL_DG_OH.get(m, DEFAULT_DG_OH)) for m in metals]
         best, _ = min(dg_vals, key=lambda x: abs(x[1] - 1.60))
         return best
 
@@ -344,14 +234,13 @@ class OERPredictor:
         symbols = {str(sp) for sp in structure.species}
         metals = symbols & METAIS_TRANSICAO
         if not metals:
-            return _DEFAULT_DG_OH
-        dg_vals = [(m, _METAL_DG_OH.get(m, _DEFAULT_DG_OH)) for m in metals]
+            return DEFAULT_DG_OH
+        dg_vals = [(m, METAL_DG_OH.get(m, DEFAULT_DG_OH)) for m in metals]
         _, best_dg = min(dg_vals, key=lambda x: abs(x[1] - 1.60))
         return best_dg
 
     @staticmethod
     def _compute_overpotential(dg_oh: float, dg_o: float, dg_ooh: float) -> float:
-        """Overpotential teórico: η = max(ΔGᵢ) − 1.23 V."""
         e_total = 4.0 * E_OER_REVERSIVEL
         dg1 = dg_oh
         dg2 = dg_o - dg_oh
@@ -360,7 +249,6 @@ class OERPredictor:
         return max(max(dg1, dg2, dg3, dg4) - E_OER_REVERSIVEL, 0.0)
 
     def _estimate_band_gap(self, structure: Structure, bulk_pred: dict) -> float:
-        """Band gap estimado a partir de descritores CHGNet (eV)."""
         magmom = bulk_pred["metal_avg_magmom"]
         e_bulk = bulk_pred["e_per_atom"]
         symbols = {str(sp) for sp in structure.species}
@@ -378,8 +266,6 @@ class OERPredictor:
             return float(np.clip(gap, 0.0, 1.0))
         gap = 1.0 + 0.5 * magmom
         return float(np.clip(gap, 0.5, 3.0))
-
-    # Parsing / Validação
 
     @staticmethod
     def _parse_structure(file_content: str) -> Structure:

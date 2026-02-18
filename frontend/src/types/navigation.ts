@@ -7,7 +7,7 @@ export interface ItemNavegacao {
 
 export const ITENS_NAVEGACAO: ItemNavegacao[] = [
   {
-    rota: '/laboratorio',
+    rota: '/predicao',
     label: 'Laboratório OER',
     icone: 'pi pi-bolt',
     descricao: 'Predição de atividade eletrocatalítica OER',
