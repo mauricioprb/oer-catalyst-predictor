@@ -179,7 +179,7 @@ Essa estimativa é útil para triagem rápida, indicando se o material tem cará
 ## Estrutura de Diretórios
 
 ```
-nano-met/
+oer-catalyst-predictor/
 ├── docker-compose.yml                  # Orquestração dos containers
 ├── package.json                        # Scripts raiz (lint)
 │
