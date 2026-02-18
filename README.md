@@ -19,7 +19,7 @@ O sistema utiliza o **CHGNet** (Crystal Hamiltonian Graph Neural Network) - um p
 - [Fluxo de Uso](#fluxo-de-uso)
 - [Desenvolvimento](#desenvolvimento)
 - [Solução de Problemas](#solução-de-problemas)
-- [Stack Tecnológica](#stack-tecnológica)
+- [Stack](#stack)
 - [Referências](#referências)
 
 ---
@@ -56,7 +56,7 @@ O Nanoxus recebe um arquivo de estrutura cristalina (`.cif`, `.xyz` ou `.vasp`) 
 - **η < 0,40 V** → catalisador **viável** e promissor para aplicação
 - **η = 0,00 V** → catalisador ideal (termodinamicamente perfeito, teórico)
 - **η > 0,40 V** → catalisador **ineficiente** - requer muita energia extra
-- **ΔG\*OH ≈ 1,60 eV** → pico do volcano OER - atividade máxima segundo as relações de escala universais
+- **ΔG\*OH ≈ 1,60 eV** → pico do Gráfico de dispersão OER - atividade máxima segundo as relações de escala universais
 
 O frontend apresenta um gráfico de dispersão que posiciona o material analisado no gráfico de atividade OER (overpotential vs. ΔG\*OH), permitindo comparação visual com catalisadores de referência.
 
@@ -101,7 +101,7 @@ onde $E_{slab}$ é a energia total do slab relaxado, $N$ é o número de átomos
 
 As energias de adsorção são calculadas usando **relações de escala universais** (Man et al., *ChemCatChem* 2011), calibradas por metal de transição:
 
-1. **ΔG\*OH (baseline)**: valor tabelado para cada metal de transição, selecionando o metal com ΔG\*OH mais próximo do pico do volcano (~1,60 eV)
+1. **ΔG\*OH (baseline)**: valor tabelado para cada metal de transição, selecionando o metal com ΔG\*OH mais próximo do pico do Gráfico de dispersão (~1,60 eV)
 
 2. **Correções físicas** aplicadas ao baseline (limitadas a ±0,30 eV):
    - **Energia de superfície**: $\Delta\gamma = \gamma - \gamma_{ref}$ → superfícies mais reativas (γ↑) reduzem ΔG\*OH
@@ -169,7 +169,7 @@ Essa estimativa é útil para triagem rápida, indicando se o material tem cará
                               └─────────────────┘
 ```
 
-- **Frontend (Vue.js 3 + Vite)** - Interface web para upload de estruturas cristalinas, visualização 3D interativa (3Dmol.js), exibição de métricas OER, volcano plot e tema claro/escuro
+- **Frontend (Vue.js 3 + Vite)** - Interface web para upload de estruturas cristalinas, visualização 3D interativa (3Dmol.js), exibição de métricas OER, Gráfico de dispersão plot e tema claro/escuro
 - **Backend (FastAPI + CHGNet)** - API REST que recebe arquivos de estrutura, executa o pipeline de predição OER e retorna os resultados
 - **CHGNet** - Rede neural em grafo que substitui cálculos DFT, inferindo energia, forças, stress e momentos magnéticos
 - **Docker Compose** - Orquestra os dois serviços na rede `rede_nanoxus`. O Vite faz proxy de `/api/*` e `/health` para o backend. O container da API utiliza `runtime: nvidia` para aceleração GPU
@@ -223,7 +223,7 @@ oer-catalyst-predictor/
         ├── layouts/
         │   └── DashboardLayout.vue     # Header, status da API, tema
         ├── views/
-        │   └── PredicaoView.vue        # Página principal - upload, 3D, resultados, volcano plot
+        │   └── PredicaoView.vue        # Página principal - upload, 3D, resultados, Gráfico de dispersão
         ├── components/
         │   ├── predicao/
         │   │   ├── AdsorptionEnergies.vue   # Energias ΔG*OH, ΔG*O, ΔG*OOH
@@ -231,8 +231,8 @@ oer-catalyst-predictor/
         │   │   ├── InferenceDetails.vue     # Tempo de inferência, fórmula
         │   │   ├── MoleculeViewer.vue       # Visualizador 3D (3Dmol.js)
         │   │   ├── OERMetrics.vue           # Cards de overpotential, viabilidade, band gap
-        │   │   ├── OverpotentialGauge.vue    # Gauge visual do overpotential
-        │   │   └── VolcanoPlot.vue          # Gráfico volcano (η vs ΔG*OH)
+        │   │   ├── OverpotentialGauge.vue   # Gauge visual do overpotential
+        │   │   └── VolcanoPlot.vue          # Gráfico Gráfico de dispersão (η vs ΔG*OH)
         │   └── ui/
         │       ├── MetricCard.vue           # Card genérico de métrica
         │       ├── PageHeader.vue           # Cabeçalho de página
@@ -392,7 +392,7 @@ curl -X POST http://localhost:8000/api/predict \
 4. Clique em **Analisar Estrutura**
 5. Os resultados aparecem:
    - **OER Metrics** - fórmula, overpotential, viabilidade, band gap
-   - **Volcano Plot** - posição do material no gráfico de atividade OER
+   - **Gráfico de dispersão** - posição do material no gráfico de atividade OER
    - **Energias de Adsorção** - ΔG\*OH, ΔG\*O, ΔG\*OOH
    - **Detalhes de Inferência** - tempo de execução
 
@@ -473,7 +473,7 @@ docker compose down -v     # remove tudo
 
 ---
 
-## Stack Tecnológica
+## Stack
 
 | Componente         | Tecnologia                | Versão        |
 | ------------------ | ------------------------- | ------------- |

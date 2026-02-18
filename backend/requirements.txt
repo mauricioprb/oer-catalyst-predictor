@@ -1,10 +1,10 @@
 fastapi==0.129.0
 uvicorn[standard]==0.41.0
 python-multipart==0.0.22
-numpy==2.2.6
+numpy==2.4.2
 torch==2.10.0
 pydantic==2.12.5
-pymatgen>=2025.1.0
-torch-geometric>=2.7.0
-chgnet>=0.4.0
-ase>=3.22.0
+pymatgen==2025.10.7
+torch-geometric==2.7.0
+chgnet==0.4.2
+ase==3.27.0
