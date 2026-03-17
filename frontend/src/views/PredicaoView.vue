@@ -9,6 +9,7 @@
           @selecionar="aoSelecionarArquivo"
           @limpar="limparTudo"
           @analisar="executarPredicao"
+          @colar="aoColarConteudo"
         />
 
         <transition name="slide-up">
@@ -79,7 +80,7 @@ interface FileUploadSelectEvent {
 
 const toast = useToast()
 
-const { conteudo: cifData, arquivoSelecionado, validarExtensao, lerArquivo, limpar: limparArquivo } = useFileReader()
+const { conteudo: cifData, arquivoSelecionado, validarExtensao, lerArquivo, setManualContent, limpar: limparArquivo } = useFileReader()
 const { carregando, resultado, executarPredicao: predizer, limpar: limparPredicao } = useOERPrediction()
 
 function aoSelecionarArquivo(event: FileUploadSelectEvent): void {
@@ -105,6 +106,10 @@ function aoSelecionarArquivo(event: FileUploadSelectEvent): void {
       life: 5000,
     })
   })
+}
+
+function aoColarConteudo(texto: string): void {
+  setManualContent(texto)
 }
 
 function limparTudo(): void {

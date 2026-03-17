@@ -27,6 +27,15 @@ export function useFileReader() {
     })
   }
 
+  function setManualContent(texto: string, nome = 'estrutura_colada.cif') {
+    conteudo.value = texto
+    if (texto.trim()) {
+      arquivoSelecionado.value = new File([texto], nome, { type: 'text/plain' })
+    } else {
+      arquivoSelecionado.value = null
+    }
+  }
+
   function limpar() {
     conteudo.value = ''
     arquivoSelecionado.value = null
@@ -38,6 +47,7 @@ export function useFileReader() {
     extensoesValidas,
     validarExtensao,
     lerArquivo,
+    setManualContent,
     limpar,
   }
 }
