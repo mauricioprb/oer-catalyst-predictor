@@ -66,36 +66,60 @@ class OERPredictor:
         self._validate_composition(structure)
 
         bulk_pred = self._predict_bulk(structure)
+        e_bulk = bulk_pred["e_per_atom"]
+        
+        results: list[OERResult] = []
 
-        surface_energy, _ = self._compute_surface_energy(
-            structure, bulk_pred["e_per_atom"]
-        )
+        for hkl in MILLER_INDICES:
+            try:
+                slab = self._generate_slab(structure, hkl)
+                if slab is None:
+                    continue
 
-        dg_oh, dg_o, dg_ooh = self._compute_oer_energies(
-            structure, bulk_pred, surface_energy
-        )
+                surface_energy, _ = self._compute_surface_energy_for_slab(
+                    slab, e_bulk
+                )
 
-        overpotential = self._compute_overpotential(dg_oh, dg_o, dg_ooh)
-        band_gap = self._estimate_band_gap(structure, bulk_pred)
+                dg_oh, dg_o, dg_ooh = self._compute_oer_energies(
+                    structure, bulk_pred, surface_energy
+                )
 
-        is_viable = overpotential < LIMIAR_OVERPOTENTIAL
-        formula = structure.composition.reduced_formula
+                overpotential = self._compute_overpotential(dg_oh, dg_o, dg_ooh)
+                band_gap = self._estimate_band_gap(structure, bulk_pred)
 
+                is_viable = overpotential < LIMIAR_OVERPOTENTIAL
+                formula = structure.composition.reduced_formula
+
+                results.append(OERResult(
+                    formula=f"{formula} ({hkl[0]}{hkl[1]}{hkl[2]})",
+                    band_gap_eV=round(band_gap, 4),
+                    overpotential_V=round(overpotential, 4),
+                    is_viable=is_viable,
+                    delta_G_O=round(dg_o, 4),
+                    delta_G_OH=round(dg_oh, 4),
+                    delta_G_OOH=round(dg_ooh, 4),
+                ))
+                
+                logger.info(
+                    "Faceta %s: η=%.4f V | γ=%.3f J/m²",
+                    hkl, overpotential, surface_energy
+                )
+
+            except Exception as exc:
+                logger.warning("Falha ao analisar faceta %s: %s", hkl, exc)
+                continue
+
+        if not results:
+            raise InvalidCatalystError("Não foi possível gerar ou relaxar nenhum slab para as facetas principais.")
+
+        best_result = min(results, key=lambda x: x["overpotential_V"])
+        
         logger.info(
-            "CHGNet: %s | η=%.4f V | viável=%s | e=%.4f eV/at | γ=%.3f J/m²",
-            formula, overpotential, is_viable,
-            bulk_pred["e_per_atom"], surface_energy,
+            "Melhor resultado: %s | η=%.4f V | viável=%s",
+            best_result["formula"], best_result["overpotential_V"], best_result["is_viable"]
         )
 
-        return OERResult(
-            formula=formula,
-            band_gap_eV=round(band_gap, 4),
-            overpotential_V=round(overpotential, 4),
-            is_viable=is_viable,
-            delta_G_O=round(dg_o, 4),
-            delta_G_OH=round(dg_oh, 4),
-            delta_G_OOH=round(dg_ooh, 4),
-        )
+        return best_result
 
     def _predict_bulk(self, structure: Structure) -> dict:
         pred = self._model.predict_structure(structure)
@@ -126,16 +150,11 @@ class OERPredictor:
             "metal_avg_magmom": avg_mag,
         }
 
-    def _compute_surface_energy(
-        self, structure: Structure, e_bulk: float
+    def _compute_surface_energy_for_slab(
+        self, slab, e_bulk: float
     ) -> tuple[float, float]:
         from ase.constraints import FixAtoms
         from ase.optimize import BFGS
-
-        slab = self._find_best_slab(structure)
-        if slab is None:
-            logger.warning("Sem slab válido. Usando γ=0.75 J/m².")
-            return 0.75, e_bulk
 
         atoms = self._adaptor.get_atoms(slab)
         z = atoms.positions[:, 2]
@@ -144,9 +163,9 @@ class OERPredictor:
         atoms.calc = self._make_calculator()
 
         try:
-            BFGS(atoms, logfile=None).run(fmax=0.05, steps=80)
+            BFGS(atoms, logfile=None).run(fmax=0.08, steps=50)
         except Exception as exc:
-            logger.warning("Relaxação slab falhou: %s", exc)
+            logger.warning("Relaxação slab instável: %s", exc)
 
         E_slab = atoms.get_potential_energy()
         n_slab = len(atoms)
@@ -155,40 +174,35 @@ class OERPredictor:
         area = float(np.linalg.norm(
             np.cross(slab.lattice.matrix[0], slab.lattice.matrix[1])
         ))
-        area = max(area, 1.0)
+        area = max(area, 0.1)
 
         gamma = (E_slab - n_slab * e_bulk) / (2.0 * area) * 16.0218
         gamma = max(gamma, 0.0)
 
-        logger.debug("Slab: %d at, γ=%.3f J/m²", n_slab, gamma)
         return float(gamma), e_slab
 
-    def _find_best_slab(self, structure: Structure):
-        for hkl in MILLER_INDICES:
-            try:
-                slabs = SlabGenerator(
-                    structure, list(hkl),
-                    min_slab_size=8.0, min_vacuum_size=15.0,
-                    center_slab=True,
-                ).get_slabs()
-                sym = [s for s in slabs if s.is_symmetric()]
-                if sym:
-                    return sym[0]
-                non_polar = [s for s in slabs if not s.is_polar()]
-                if non_polar:
-                    return non_polar[0]
-            except Exception:
-                continue
-
+    def _generate_slab(self, structure: Structure, hkl: tuple[int, int, int]):
+        """Gera um slab simétrico para um dado índice de Miller."""
         try:
-            slabs = SlabGenerator(
-                structure, [1, 1, 0],
-                min_slab_size=6.0, min_vacuum_size=12.0,
+            gen = SlabGenerator(
+                structure, list(hkl),
+                min_slab_size=7.5, min_vacuum_size=12.0,
                 center_slab=True,
-            ).get_slabs()
-            return slabs[0] if slabs else None
-        except Exception:
+            )
+            slabs = gen.get_slabs()
+            if not slabs:
+                return None
+                
+            sym = [s for s in slabs if s.is_symmetric()]
+            if sym:
+                return sym[0]
+            
+            non_polar = [s for s in slabs if not s.is_polar()]
+            return non_polar[0] if non_polar else slabs[0]
+        except Exception as e:
+            logger.debug("Falha ao gerar slab %s: %s", hkl, e)
             return None
+
 
     def _compute_oer_energies(
         self, structure: Structure, bulk_pred: dict, surface_energy: float
@@ -221,7 +235,7 @@ class OERPredictor:
 
     @staticmethod
     def _get_principal_metal(structure: Structure) -> str:
-        symbols = {str(sp) for sp in structure.species}
+        symbols = {getattr(sp, "symbol", str(sp)) for sp in structure.species}
         metals = symbols & METAIS_TRANSICAO
         if not metals:
             return "Ru"
@@ -231,7 +245,7 @@ class OERPredictor:
 
     @staticmethod
     def _get_baseline_dg_oh(structure: Structure) -> float:
-        symbols = {str(sp) for sp in structure.species}
+        symbols = {getattr(sp, "symbol", str(sp)) for sp in structure.species}
         metals = symbols & METAIS_TRANSICAO
         if not metals:
             return DEFAULT_DG_OH
@@ -269,48 +283,66 @@ class OERPredictor:
 
     @staticmethod
     def _parse_structure(file_content: str) -> Structure:
-        cif_error = None
-        xyz_error = None
+        content = file_content.strip()
+        if not content:
+            raise CIFParsingError("Conteúdo do arquivo está vazio (após strip).")
+
+        from pymatgen.io.cif import CifParser
+        from io import StringIO
+        
+        try:
+            parser = CifParser(StringIO(content))
+            structures = parser.get_structures(primitive=False)
+            if structures:
+                logger.debug("CIF parsed via CifParser: %s", structures[0].formula)
+                return structures[0]
+        except Exception as exc:
+            logger.warning("Falha inicial no CifParser: %s", exc)
+
+        for fmt in ["cif", "poscar", "vasp", "xyz"]:
+            try:
+                structure = Structure.from_str(content, fmt=fmt)
+                logger.debug("Estrutura lida via from_str (fmt=%s): %s", fmt, structure.formula)
+                return structure
+            except Exception:
+                continue
 
         try:
-            structure = Structure.from_str(file_content, fmt="cif")
-            logger.debug("CIF parsed: %s", structure.formula)
-            return structure
-        except Exception as exc:
-            cif_error = exc
-
-        tmp_path: Path | None = None
-        try:
-            with tempfile.NamedTemporaryFile(
-                mode="w", suffix=".xyz", delete=False
-            ) as tmp:
-                tmp.write(file_content)
-                tmp_path = Path(tmp.name)
-            structure = Structure.from_file(str(tmp_path), fmt="xyz")
-            logger.debug("XYZ parsed: %s", structure.formula)
-            return structure
-        except Exception as exc:
-            xyz_error = exc
-        finally:
-            if tmp_path:
-                try:
-                    tmp_path.unlink(missing_ok=True)
-                except OSError:
-                    pass
+            import tempfile
+            from ase.io import read
+            from pymatgen.io.ase import AseAtomsAdaptor
+            
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as tmp:
+                tmp.write(content)
+                tmp_path = tmp.name
+                
+            try:
+                atoms = read(tmp_path)
+                structure = AseAtomsAdaptor.get_structure(atoms)
+                logger.debug("Estrutura lida via ASE fallback: %s", structure.formula)
+                return structure
+            finally:
+                Path(tmp_path).unlink(missing_ok=True)
+        except Exception as ase_exc:
+            logger.error("Fallback ASE também falhou: %s", ase_exc)
 
         raise CIFParsingError(
-            f"CIF error: {cif_error}  |  XYZ error: {xyz_error}"
+            "Não foi possível identificar uma estrutura cristalina válida no arquivo. "
+            "Certifique-se de que o arquivo .cif ou .xyz está no formato correto."
         )
 
     @staticmethod
     def _validate_composition(structure: Structure) -> None:
-        symbols = {str(sp) for sp in structure.species}
+        symbols = {getattr(sp, "symbol", str(sp)) for sp in structure.species}
+        
         if "O" not in symbols:
             raise InvalidCatalystError(
-                f"{structure.composition.reduced_formula} não contém O."
+                f"{structure.composition.reduced_formula} não contém oxigênio (O)."
             )
-        if not (symbols & METAIS_TRANSICAO):
+            
+        metais_no_catalisador = symbols & METAIS_TRANSICAO
+        if not metais_no_catalisador:
             raise InvalidCatalystError(
-                f"{structure.composition.reduced_formula} sem metal de transição. "
-                f"Encontrados: {sorted(symbols)}."
+                f"{structure.composition.reduced_formula} não possui metais de transição conhecidos. "
+                f"Encontrados: {', '.join(sorted(symbols))}."
             )
